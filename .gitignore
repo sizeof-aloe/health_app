@@ -1,3 +1,67 @@
 
 # FVM Version Cache
 .fvm/
+
+.dart_tool/
+
+
+# Miscellaneous (기타 시스템 파일)
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Flutter/Dart/Pub related (Flutter 빌드 및 의존성)
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Web related
+lib/generated_plugin_registrant.dart
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/key.properties
+**/android/**/generated/
+
+# iOS/macOS related
+**/ios/**/ide/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/gen_snapshot
+**/ios/frameworks/
+**/ios/Pods/
+**/ios/.xcode.env.local
+**/macos/Flutter/Generated.xcconfig
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# Windows related
+**/windows/flutter/ephemeral/
+
+# Linux related
+**/linux/flutter/ephemeral/

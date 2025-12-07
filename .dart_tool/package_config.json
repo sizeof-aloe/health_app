@@ -38,16 +38,34 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "equatable",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/equatable-2.0.7",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "fake_async",
       "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/fake_async-1.3.3",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
     {
+      "name": "fl_chart",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/fl_chart-0.66.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///C:/Users/RTX2080/fvm/versions/3.38.4/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.8"
+    },
+    {
+      "name": "flutter_bluetooth_serial",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_bluetooth_serial-0.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "flutter_lints",
@@ -60,6 +78,24 @@
       "rootUri": "file:///C:/Users/RTX2080/fvm/versions/3.38.4/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
+    },
+    {
+      "name": "flutter_web_plugins",
+      "rootUri": "file:///C:/Users/RTX2080/fvm/versions/3.38.4/packages/flutter_web_plugins",
+      "packageUri": "lib/",
+      "languageVersion": "3.8"
+    },
+    {
+      "name": "get",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/get-4.7.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.15"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.19.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "leak_tracker",
@@ -108,6 +144,48 @@
       "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/path-1.9.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "permission_handler",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler-11.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "permission_handler_android",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_android-12.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "permission_handler_apple",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_apple-9.4.7",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "permission_handler_html",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_html-0.1.3+5",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "permission_handler_platform_interface",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_platform_interface-4.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "permission_handler_windows",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/permission_handler_windows-0.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "plugin_platform_interface",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/plugin_platform_interface-2.1.8",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "sky_engine",
@@ -162,6 +240,12 @@
       "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.0.2",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "web",
+      "rootUri": "file:///C:/Users/RTX2080/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "health_app",
