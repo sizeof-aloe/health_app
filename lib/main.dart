@@ -4,14 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('ko_KR', ""); 
   runApp(const MyApp());
 }
 
@@ -33,7 +30,7 @@ class MyApp extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Controller: 블루투스 연결 및 데이터 수신 로직
+// 1. Controller: 블루투스 연결 및 데이터 수신 로직 (수정됨)
 // ---------------------------------------------------------------------------
 class HealthController extends GetxController {
   // 상태 변수
@@ -41,21 +38,24 @@ class HealthController extends GetxController {
   var spo2 = 0.0.obs;
   var isConnected = false.obs;
   var connectionStatus = "연결 끊김".obs;
-  var lastUpdated = '-'.obs;
+  var lastUpdated = '-'.obs; // 수신된 시간 문자열 저장
   
   // 그래프 데이터
   var waveformData = <FlSpot>[].obs;
+  // X축 값(정수 카운터)에 대응하는 시간 문자열을 저장하는 맵
+  var timeLabels = <int, String>{}.obs; 
+  
   double _timeCounter = 0;
 
   // 블루투스 관련 변수
   BluetoothConnection? _connection;
-  String _inputBuffer = ""; // 수신 데이터 버퍼
+  String _inputBuffer = "";
 
   @override
   void onInit() {
     super.onInit();
-    _requestPermissions(); // 앱 시작 시 권한 요청
-    _initWaveform(); // 그래프 초기화 (빈 데이터)
+    _requestPermissions();
+    _initWaveform();
   }
 
   @override
@@ -66,13 +66,13 @@ class HealthController extends GetxController {
 
   // 초기 그래프 세팅
   void _initWaveform() {
+    // 초기에는 데이터가 없으므로 0으로 채우되 시간 라벨은 비워둠
     for (int i = 0; i < 50; i++) {
       waveformData.add(FlSpot(i.toDouble(), 0));
     }
     _timeCounter = 50;
   }
 
-  // 권한 요청 함수
   Future<void> _requestPermissions() async {
     await [
       Permission.bluetooth,
@@ -82,9 +82,8 @@ class HealthController extends GetxController {
     ].request();
   }
 
-  // 1. 디바이스 선택 및 연결 함수 (UI에서 호출)
+  // 연결 로직 (기존과 동일)
   Future<void> connectToDevice(BuildContext context) async {
-    // 이미 연결된 경우 해제
     if (isConnected.value) {
       _connection?.dispose();
       isConnected.value = false;
@@ -92,16 +91,13 @@ class HealthController extends GetxController {
       return;
     }
 
-    // 블루투스 켜져있는지 확인
     bool isEnabled = await FlutterBluetoothSerial.instance.isEnabled ?? false;
     if (!isEnabled) {
       await FlutterBluetoothSerial.instance.requestEnable();
     }
 
-    // 페어링된 기기 목록 가져오기
     List<BluetoothDevice> devices = await FlutterBluetoothSerial.instance.getBondedDevices();
 
-    // 기기 선택 다이얼로그 표시
     BluetoothDevice? selectedDevice = await showDialog(
       context: context,
       builder: (context) {
@@ -133,7 +129,6 @@ class HealthController extends GetxController {
     }
   }
 
-  // 2. 실제 연결 수행
   void _startConnection(BluetoothDevice device) async {
     try {
       connectionStatus.value = "연결 중...";
@@ -142,7 +137,6 @@ class HealthController extends GetxController {
       isConnected.value = true;
       connectionStatus.value = "연결됨";
       
-      // 데이터 수신 리스너 등록
       _connection!.input!.listen(_onDataReceived).onDone(() {
         isConnected.value = false;
         connectionStatus.value = "연결 종료";
@@ -155,51 +149,60 @@ class HealthController extends GetxController {
     }
   }
 
-  // 3. 데이터 수신 및 파싱 (핵심 로직)
   void _onDataReceived(Uint8List data) {
-    // 1. 들어온 바이트 데이터를 문자열로 변환하여 버퍼에 추가
     String incomingData = utf8.decode(data);
     _inputBuffer += incomingData;
 
-    // 2. 줄바꿈 문자(\n)가 있는지 확인
     while (_inputBuffer.contains('\n')) {
       int index = _inputBuffer.indexOf('\n');
-      String packet = _inputBuffer.substring(0, index).trim(); // 한 줄 추출
-      _inputBuffer = _inputBuffer.substring(index + 1); // 버퍼에서 제거
+      String packet = _inputBuffer.substring(0, index).trim();
+      _inputBuffer = _inputBuffer.substring(index + 1);
 
       _parseAndProcess(packet);
     }
   }
 
-  // 4. 패킷 해석 (포맷: RAW,SPO2,BPM)
+  // 4. 패킷 해석 (수정됨: 시:분:초,RAW,SPO2,BPM)
   void _parseAndProcess(String packet) {
     if (packet.isEmpty) return;
 
     try {
       List<String> values = packet.split(',');
-      if (values.length >= 3) {
-        // 데이터 파싱
-        double rawValue = double.parse(values[0]); // 그래프용
-        double spo2Value = double.parse(values[1]); // SpO2
-        double bpmValue = double.parse(values[2]); // 심박수
+      // 데이터 형식이 변경되어 길이가 최소 4개여야 함
+      if (values.length >= 4) {
+        // [0]: 시간 문자열 (예: 14:30:05)
+        String timeStr = values[0];
+        // [1]: Raw PPG
+        double rawValue = double.parse(values[1]);
+        // [2]: SpO2
+        double spo2Value = double.parse(values[2]);
+        // [3]: BPM
+        double bpmValue = double.parse(values[3]);
 
         // 상태 업데이트
         spo2.value = spo2Value;
         heartRate.value = bpmValue;
         
+        // **중요**: Last Updated를 수신된 시간으로 변경
+        lastUpdated.value = timeStr; 
+
         // 그래프 데이터 업데이트 (슬라이딩 윈도우)
+        // X축 좌표는 계속 증가하는 정수(_timeCounter)를 사용하고,
+        // 해당 정수에 매핑되는 시간 문자열을 timeLabels 맵에 저장합니다.
         waveformData.add(FlSpot(_timeCounter, rawValue));
+        timeLabels[_timeCounter.toInt()] = timeStr;
+
         if (waveformData.length > 50) {
+          // 윈도우 밖으로 나가는 데이터의 시간 라벨 제거 (메모리 관리)
+          double removedIndex = waveformData[0].x;
+          timeLabels.remove(removedIndex.toInt());
+          
           waveformData.removeAt(0);
         }
         _timeCounter++;
-
-        // 시간 업데이트 (너무 자주하면 성능 저하되므로 가끔씩 해도 됨)
-        lastUpdated.value = DateFormat('a h:mm:ss', 'ko_KR').format(DateTime.now());
       }
     } catch (e) {
-      // 파싱 에러 무시 (노이즈 데이터 등)
-      print("Parsing Error: $packet");
+      print("Parsing Error: $packet / $e");
     }
   }
 }
@@ -247,7 +250,6 @@ class HealthDashboardPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // 블루투스 연결 버튼
                     Obx(() => TextButton.icon(
                       onPressed: () => controller.connectToDevice(context),
                       icon: Icon(
@@ -299,7 +301,7 @@ class HealthDashboardPage extends StatelessWidget {
 
                       // Chart
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.only(top: 24, left: 16, right: 24, bottom: 24),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
@@ -315,15 +317,20 @@ class HealthDashboardPage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "맥박 파형 (PPG Raw Data)",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 8.0),
+                              child: Text(
+                                "맥박 파형 (PPG Raw Data)",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
                             ),
                             const SizedBox(height: 24),
                             SizedBox(
-                              height: 200,
+                              height: 220, // X축 라벨을 위해 높이를 약간 늘림
                               child: Obx(() => PulseWaveform(
                                     points: controller.waveformData.toList(),
+                                    // 컨트롤러의 타임 라벨 맵을 전달
+                                    timeLabels: controller.timeLabels,
                                   )),
                             ),
                           ],
@@ -331,9 +338,17 @@ class HealthDashboardPage extends StatelessWidget {
                       ),
                       
                       const SizedBox(height: 24),
-                      Obx(() => Text(
-                        "Last Update: ${controller.lastUpdated.value}",
-                        style: const TextStyle(color: Colors.grey),
+                      // 수신된 시간 표시 (lastUpdated)
+                      Obx(() => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "측정 시간: ${controller.lastUpdated.value}",
+                          style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                        ),
                       )),
                     ],
                   ),
@@ -346,9 +361,6 @@ class HealthDashboardPage extends StatelessWidget {
     );
   }
 }
-
-// (하단에 HealthCard, PulseWaveform 클래스는 기존과 동일하게 유지하거나 필요시 복사하세요)
-// 공간 절약을 위해 아래 컴포넌트 코드는 생략하지 않고 포함합니다.
 
 class HealthCard extends StatelessWidget {
   final String title;
@@ -399,25 +411,75 @@ class HealthCard extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 3. Chart Component (수정됨)
+// ---------------------------------------------------------------------------
 class PulseWaveform extends StatelessWidget {
   final List<FlSpot> points;
-  const PulseWaveform({super.key, required this.points});
+  final Map<int, String> timeLabels; // 시간 라벨 맵 추가
+
+  const PulseWaveform({
+    super.key, 
+    required this.points,
+    required this.timeLabels,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Y축 범위를 데이터에 맞춰 자동 조절하고 싶으면 minY/maxY를 제거하거나 동적으로 계산하세요.
-    // 여기서는 Raw Data 범위가 0~1024 라고 가정하고 대략적으로 잡습니다.
+    double minX = points.isNotEmpty ? points.first.x : 0;
+    double maxX = points.isNotEmpty ? points.last.x : 50;
+
     return LineChart(
       LineChartData(
+        // 그리드 숨김
         gridData: const FlGridData(show: false),
-        titlesData: const FlTitlesData(show: false),
+        
+        // 타이틀(축 라벨) 설정
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          // 하단 X축 설정
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30, // 라벨이 표시될 공간 확보
+              interval: 1, // 모든 점에 대해 콜백 실행 (아래에서 필터링)
+              getTitlesWidget: (value, meta) {
+                int index = value.toInt();
+                
+                // 라벨이 너무 빽빽하지 않게 표시 (예: 10개 데이터마다 1번씩 표시)
+                // maxX에 가까운 최근 값도 표시되도록 조정
+                bool isInterval = index % 10 == 0;
+                
+                if (isInterval && timeLabels.containsKey(index)) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      timeLabels[index]!,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+        
         borderData: FlBorderData(show: false),
-        lineTouchData: const LineTouchData(enabled: false),
-        // Raw Data 값 범위에 따라 수정 필요 (예: 0~1024)
-        // minY: 0, 
-        // maxY: 1024, 
-        minX: points.isNotEmpty ? points.first.x : 0,
-        maxX: points.isNotEmpty ? points.last.x : 50,
+        lineTouchData: const LineTouchData(enabled: false), // 터치 비활성화 (실시간이라 성능 위함)
+        
+        // 데이터 범위
+        minX: minX,
+        maxX: maxX,
+        // minY, maxY는 데이터에 따라 자동 조절됨 (필요시 고정 가능)
+
         lineBarsData: [
           LineChartBarData(
             spots: points,
@@ -425,7 +487,10 @@ class PulseWaveform extends StatelessWidget {
             color: Colors.blue.shade500,
             barWidth: 2,
             dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.blue.withOpacity(0.1), // 그래프 아래 은은한 색상 추가
+            ),
           ),
         ],
       ),
