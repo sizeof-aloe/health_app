@@ -3,6 +3,7 @@
 .fvm/
 
 .dart_tool/
+.vscode/
 
 
 # Miscellaneous (기타 시스템 파일)
