@@ -21,6 +21,7 @@ dependencies:
   permission_handler: ^11.0.0
   audioplayers: ^6.0.0             
   flutter_local_notifications: ^18.0.0 
+  shared_preferences: ^2.2.2
 
   cupertino_icons: ^1.0.8
 
