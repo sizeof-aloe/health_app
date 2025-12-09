@@ -42,6 +42,8 @@ class HealthController extends GetxController {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
   
   DateTime? _lastAlertTime; 
+  
+
   static const int ALERT_COOLDOWN_SECONDS = 5; 
 
   @override
@@ -269,7 +271,7 @@ class HealthController extends GetxController {
         
         // [변경] 패킷 시간을 UI 업데이트에 반영
         lastUpdated.value = packetTime;
-        
+
         _updateGraph(raw);
         
         // [변경] 경고 체크 및 저장 시 패킷 시간 전달
@@ -345,7 +347,7 @@ class HealthController extends GetxController {
 
   void _updateGraph(double rawValue) {
     waveformData.add(FlSpot(_timeCounter, rawValue));
-    if (waveformData.length > 50) {
+    if (waveformData.length > 10) {
       waveformData.removeAt(0);
     }
     _timeCounter++;
